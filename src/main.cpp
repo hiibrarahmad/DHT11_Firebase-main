@@ -21,8 +21,10 @@ int Sensor2 = 0;  // Flame Sensor
 int Sensor3 = 0;  // LDR Sensor
 float Sensor4 = 0.0;  // LDR Sensor
 float Sensor5 = 0.0;  // LDR Sensor
+int Sensor6 = 0;  // LDR Sensor
 
 String DayNight = "Day";
+String MotorStatus;
 
 
 #define WIFI_SSID "ibrar"
@@ -98,35 +100,37 @@ void onReceive(int packetSize) {
   String s = getValue(incoming, ',', 2);  // LDR
   String t = getValue(incoming, ',', 3);  // LDR
   String h = getValue(incoming, ',', 4);  // LDR
+  String m = getValue(incoming, ',', 5);  // LDR
 
   Sensor1 = q.toInt();
   Sensor2 = r.toInt();
   Sensor3 = s.toInt();
   Sensor4 = t.toFloat();
   Sensor5 = h.toFloat();
+  Sensor6 = m.toInt();
 
-  if (Firebase.setInt(fbdo, "/temp", Sensor4)) {
+  if (Firebase.setInt(fbdo, "/Temperature", Sensor4)) {
     Serial.println("Temperature sent to Firebase successfully");
   } else {
     Serial.println("Error sending temperature to Firebase: " + fbdo.errorReason());
   }
 
-  if (Firebase.setInt(fbdo, "/humidity", Sensor5)) {
+  if (Firebase.setInt(fbdo, "/Humidity", Sensor5)) {
     Serial.println("Humidity sent to Firebase successfully");
   } else {
     Serial.println("Error sending humidity to Firebase: " + fbdo.errorReason());
   }
 
-  if (Firebase.setInt(fbdo, "/FS:", Sensor2)) {
-    Serial.println("FS sent to Firebase successfully");
+  if (Firebase.setInt(fbdo, "/MoistureSensor:", Sensor2)) {
+    Serial.println("MoistureSensor sent to Firebase successfully");
   } else {
-    Serial.println("Error sending FS to Firebase: " + fbdo.errorReason());
+    Serial.println("Error sending MoistureSensor to Firebase: " + fbdo.errorReason());
   }
 
-  if (Firebase.setInt(fbdo, "/pot", Sensor1)) {
-    Serial.println("Pot sent to Firebase successfully");
+  if (Firebase.setInt(fbdo, "/RAINSENSOR", Sensor1)) {
+    Serial.println("RAINSENSOR sent to Firebase successfully");
   } else {
-    Serial.println("Error sending Pot to Firebase: " + fbdo.errorReason());
+    Serial.println("Error sending RAINSENSOR to Firebase: " + fbdo.errorReason());
   }
 
   if (Sensor3 == 1) {
@@ -135,19 +139,32 @@ void onReceive(int packetSize) {
   if (Sensor3 == 0) {
     DayNight = "Day";
   }
+    if (Sensor6 == 1) {
+    MotorStatus = "Motor ON";
+  }
+  if (Sensor3 == 0) {
+    MotorStatus = "Motor OFF";
+  }
+
 
   if (Firebase.setInt(fbdo, "/DayNight", Sensor3)) {
     Serial.println("DN sent to Firebase successfully");
   } else {
     Serial.println("Error sending DN to Firebase: " + fbdo.errorReason());
   }
+  if (Firebase.setString(fbdo, "/Motor Status", MotorStatus)) {
+    Serial.println("Motor Status sent to Firebase successfully");
+  } else {
+    Serial.println("Error sending Motor Status to Firebase: " + fbdo.errorReason());
+  }
   incoming = "";
   Serial.print(SenderNode);
-  Serial.println("Pot:" + String(Sensor1));
-  Serial.println("FS:" + String(Sensor2));
-  Serial.println("S2:" + DayNight);
+  Serial.println("RAINSENSOR:" + String(Sensor1));
+  Serial.println("MoistureSensor:" + String(Sensor2));
+  Serial.println("LDR:" + DayNight);
   Serial.println("temp:" + String(Sensor4));
   Serial.println("hum:" + String(Sensor5));
+  Serial.println("MotorStatus:" + String(Sensor6));
 }
 
 
@@ -176,6 +193,8 @@ void setup()
     Serial.print("Connected with IP: ");
     Serial.println(WiFi.localIP());
     Serial.println();
+
+    
 
     Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
 
@@ -209,6 +228,7 @@ void setup()
 
     /* Initialize the library with the Firebase authen and config */
     Firebase.begin(&config, &auth);
+    
 }
 
 void loop()
